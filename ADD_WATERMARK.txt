@@ -1,0 +1,32 @@
+//WATERMARK ADD
+                                    byte[] files = System.IO.File.ReadAllBytes(path);
+                                    using (var ms = new MemoryStream(10 * 1024))
+                                    {
+                                        using (var reader1 = new PdfReader(files))
+                                        using (var stamper = new PdfStamper(reader1, ms))
+                                        {
+                                            PdfLayer layer = new PdfLayer("WatermarkLayer", stamper.Writer);
+                                            var pages = reader1.NumberOfPages;
+                                            for (var it = 1; it <= pages; it++)
+                                            {
+                                                var dc = stamper.GetOverContent(it);
+                                                var gstate = new PdfGState { FillOpacity = 0.35f, StrokeOpacity = 0.3f };
+                                                dc.BeginLayer(layer);
+                                                dc.SaveState();
+                                                dc.SetGState(gstate);
+                                                dc.SetColorFill(BaseColor.RED);
+                                                dc.BeginText();
+                                                BaseFont bfTimes = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, false);
+                                                dc.SetFontAndSize(bfTimes, 50);
+                                                var x = (reader1.GetPageSizeWithRotation(it).Right + reader1.GetPageSizeWithRotation(it).Left) / 2;
+                                                var y = (reader1.GetPageSizeWithRotation(it).Bottom + reader1.GetPageSizeWithRotation(it).Top) / 2;
+                                                dc.ShowTextAligned(Element.ALIGN_CENTER, "watermark_text", x, y, 45);
+                                                dc.EndText();
+                                                dc.RestoreState();
+                                                dc.EndLayer();
+                                            }
+                                            stamper.Close();
+                                        }
+                                        System.IO.File.WriteAllBytes(path, ms.ToArray());
+
+                                    }
